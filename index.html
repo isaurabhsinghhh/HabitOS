@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#10130f">
+    <meta name="description" content="A quieter way to track habits and everyday spending.">
+    <title>HabitOS — Your personal space</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+    <script type="module" src="app.js"></script>
+  </head>
+  <body>
+    <div class="page-shell">
+      
+<header class="site-header">
+  <div class="nav-shell">
+    <a class="brand" href="index.html" aria-label="HabitOS home">
+      <span class="brand-mark" aria-hidden="true">
+        <span></span><span></span><span></span>
+      </span>
+      <span class="brand-name">HabitOS</span>
+      <span class="brand-divider" aria-hidden="true"></span>
+      <span class="brand-descriptor">YOUR LIFE, INTENTIONALLY</span>
+    </a>
+
+    <nav class="primary-nav" aria-label="Main navigation">
+      <a class="nav-link is-current" href="index.html" aria-current="page">Home</a>
+    </nav>
+
+    <div class="nav-actions">
+      <div class="nav-date">
+        <span class="date-indicator" aria-hidden="true"></span>
+        <time id="today-date">Today</time>
+      </div>
+      <button id="logout-button" class="logout-button" type="button">
+        Logout
+      </button>
+    </div>
+  </div>
+</header>
+
+
+      <main class="home-main content-width">
+        <section class="home-intro" aria-labelledby="hero-title">
+          <p class="eyebrow"><span class="eyebrow-rule" aria-hidden="true"></span> Your personal space</p>
+          <h1 id="hero-title">Make room for<br><span>a better you.</span></h1>
+          <p>Track the routines you care about and keep everyday spending in view.</p>
+        </section>
+
+        <section class="home-tools" aria-labelledby="modules-title">
+          <div class="home-tools-heading"><h2 id="modules-title">Choose a tracker</h2><span>Two focused tools</span></div>
+          <div class="module-list">
+            <a class="module-card" href="habit-tracker.html" aria-label="Open Habit Tracker">
+              <span class="card-number">01</span>
+              <span class="card-copy"><strong>Habit Tracker</strong><span>Daily checklist, personal measures, and sleep.</span></span>
+              <span class="card-action">Open <span aria-hidden="true">→</span></span>
+            </a>
+            <a class="module-card" href="expense-tracker.html" aria-label="Open Expense Tracker">
+              <span class="card-number">02</span>
+              <span class="card-copy"><strong>Expense Tracker</strong><span>Daily transactions and monthly budgets.</span></span>
+              <span class="card-action">Open <span aria-hidden="true">→</span></span>
+            </a>
+          </div>
+        </section>
+      </main>
+
+      <footer class="site-footer content-width">
+        <span>Built for everyday life.</span>
+        <span>© <span id="current-year">2026</span> HabitOS</span>
+      </footer>
+    </div>
+  </body>
+</html>

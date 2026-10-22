@@ -1,0 +1,45 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>HabitOS — Connection Test</title>
+  <style>
+    body {
+      background: #111;
+      color: #eee;
+      font-family: Arial, sans-serif;
+      padding: 40px;
+    }
+    #result { margin-top: 20px; }
+  </style>
+</head>
+<body>
+  <h1>HabitOS Connection Test</h1>
+  <p>Checking your Supabase connection...</p>
+  <div id="result">Please wait...</div>
+
+  <script type="module">
+    import { supabase } from './supabase-client.js';
+
+    const result = document.getElementById('result');
+
+    try {
+      const { data, error } = await supabase.auth.getSession();
+
+      if (error) throw error;
+
+      result.textContent =
+        'Connection successful! Supabase client initialized.';
+
+      result.style.color = '#4ade80';
+      console.log('Supabase session check completed:', data);
+    } catch (error) {
+      result.textContent = 'Connection test failed: ' + error.message;
+      result.style.color = '#f87171';
+      console.error('Supabase test error:', error);
+    }
+  </script>
+</body>
+</html>
