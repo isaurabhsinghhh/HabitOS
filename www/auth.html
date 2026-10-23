@@ -1,0 +1,335 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>HabitOS — Your Personal Space</title>
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      padding: 24px;
+      background: #101110;
+      color: #f3f4f3;
+      font-family: Inter, Arial, sans-serif;
+    }
+
+    .auth-card {
+      width: 100%;
+      max-width: 420px;
+      padding: 32px;
+      border: 1px solid #303330;
+      border-radius: 18px;
+      background: #181a18;
+    }
+
+    .brand {
+      font-size: 30px;
+      font-weight: 750;
+      letter-spacing: -1.2px;
+      margin-bottom: 8px;
+    }
+
+    .subtitle {
+      color: #a5aaa5;
+      font-size: 14px;
+      line-height: 1.6;
+      margin-bottom: 28px;
+    }
+
+    .tabs {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      padding: 5px;
+      background: #101110;
+      border-radius: 10px;
+      margin-bottom: 24px;
+    }
+
+    .tabs button {
+      border: 0;
+      border-radius: 7px;
+      padding: 11px;
+      color: #a5aaa5;
+      background: transparent;
+      cursor: pointer;
+      font-size: 14px;
+    }
+
+    .tabs button.active {
+      color: #fff;
+      background: #303430;
+    }
+
+    label {
+      display: block;
+      margin: 17px 0 8px;
+      font-size: 13px;
+      color: #d5d8d5;
+    }
+
+    input {
+      width: 100%;
+      padding: 13px 14px;
+      border: 1px solid #383d38;
+      border-radius: 9px;
+      background: #111311;
+      color: #fff;
+      font-size: 14px;
+      outline: none;
+    }
+
+    input:focus {
+      border-color: #8cae91;
+    }
+
+    .submit {
+      width: 100%;
+      margin-top: 24px;
+      padding: 13px;
+      border: 0;
+      border-radius: 9px;
+      background: #d9e7d8;
+      color: #182018;
+      font-weight: 700;
+      font-size: 14px;
+      cursor: pointer;
+    }
+
+    .submit:disabled {
+      opacity: 0.6;
+      cursor: wait;
+    }
+
+    #message {
+      display: none;
+      margin-top: 18px;
+      padding: 12px;
+      border-radius: 8px;
+      font-size: 13px;
+      line-height: 1.6;
+      overflow-wrap: anywhere;
+    }
+
+    #message.success {
+      display: block;
+      background: #193021;
+      color: #a7edbd;
+    }
+
+    #message.error {
+      display: block;
+      background: #351c1c;
+      color: #ffb5b5;
+    }
+
+    .footnote {
+      margin-top: 22px;
+      text-align: center;
+      color: #858b85;
+      font-size: 12px;
+      line-height: 1.6;
+    }
+  </style>
+</head>
+
+<body>
+  <main class="auth-card">
+    <div class="brand">HabitOS<span style="color:#a8c7a5">.</span></div>
+
+    <div class="subtitle">
+      Your habits. Your progress. Your personal space.
+    </div>
+
+    <div class="tabs">
+      <button type="button" id="loginTab" class="active">
+        Sign in
+      </button>
+      <button type="button" id="signupTab">
+        Create account
+      </button>
+    </div>
+
+    <form id="authForm">
+      <div id="nameField" hidden>
+        <label for="fullName">Your name</label>
+        <input
+          id="fullName"
+          type="text"
+          autocomplete="name"
+          placeholder="Enter your name"
+          maxlength="80"
+        >
+      </div>
+
+      <label for="email">Email address</label>
+      <input
+        id="email"
+        type="email"
+        autocomplete="email"
+        placeholder="you@example.com"
+        required
+      >
+
+      <label for="password">Password</label>
+      <input
+        id="password"
+        type="password"
+        autocomplete="current-password"
+        placeholder="At least 8 characters"
+        minlength="8"
+        required
+      >
+
+      <button class="submit" id="submitButton" type="submit">
+        Sign in
+      </button>
+    </form>
+
+    <div id="message" role="status" aria-live="polite"></div>
+
+    <div class="footnote">
+      Your account is personal. Your records should only be accessible
+      to you when database security policies are correctly configured.
+    </div>
+  </main>
+
+  <script type="module">
+    import { supabase } from './supabase-client.js';
+
+    const form = document.getElementById('authForm');
+    const loginTab = document.getElementById('loginTab');
+    const signupTab = document.getElementById('signupTab');
+    const nameField = document.getElementById('nameField');
+    const fullName = document.getElementById('fullName');
+    const email = document.getElementById('email');
+    const password = document.getElementById('password');
+    const submitButton = document.getElementById('submitButton');
+    const message = document.getElementById('message');
+
+    let mode = 'login';
+
+    function showMessage(text, type) {
+      message.textContent = text;
+      message.className = type;
+    }
+
+    function setMode(nextMode) {
+      mode = nextMode;
+      const signingUp = mode === 'signup';
+
+      loginTab.classList.toggle('active', !signingUp);
+      signupTab.classList.toggle('active', signingUp);
+
+      nameField.hidden = !signingUp;
+      fullName.required = signingUp;
+
+      password.autocomplete = signingUp
+        ? 'new-password'
+        : 'current-password';
+
+      submitButton.textContent = signingUp
+        ? 'Create account'
+        : 'Sign in';
+
+      message.className = '';
+      message.textContent = '';
+    }
+
+    loginTab.addEventListener('click', () => setMode('login'));
+    signupTab.addEventListener('click', () => setMode('signup'));
+
+    // If the visitor already has a valid session, go to the homepage.
+    try {
+      const { data, error } = await supabase.auth.getSession();
+
+      if (error) throw error;
+
+      if (data.session) {
+        window.location.replace('./index.html');
+      }
+    } catch (error) {
+      console.error('Session check failed:', error);
+      showMessage(
+        'Could not check your session. Please refresh and try again.',
+        'error'
+      );
+    }
+
+    form.addEventListener('submit', async (event) => {
+      event.preventDefault();
+
+      const emailValue = email.value.trim();
+      const passwordValue = password.value;
+
+      submitButton.disabled = true;
+      submitButton.textContent = 'Please wait...';
+      message.className = '';
+      message.textContent = '';
+
+      try {
+        if (mode === 'signup') {
+          const nameValue = fullName.value.trim();
+
+          const { data, error } = await supabase.auth.signUp({
+            email: emailValue,
+            password: passwordValue,
+            options: {
+              data: {
+                full_name: nameValue
+              },
+              emailRedirectTo: 'https://habitos-seven-eta.vercel.app/auth.html'
+            }
+          });
+
+          if (error) throw error;
+
+          if (data.session) {
+            showMessage(
+              'Account created! Opening HabitOS...',
+              'success'
+            );
+
+            window.location.replace('./index.html');
+          } else {
+            showMessage(
+              'Account request submitted. Check your email for a confirmation link before signing in. If you do not see it, check your spam folder.',
+              'success'
+            );
+          }
+        } else {
+          const { error } = await supabase.auth.signInWithPassword({
+            email: emailValue,
+            password: passwordValue
+          });
+
+          if (error) throw error;
+
+          showMessage('Signed in! Opening HabitOS...', 'success');
+          window.location.replace('./index.html');
+        }
+      } catch (error) {
+        console.error('Authentication error:', error);
+
+        showMessage(
+          error.message || 'Something went wrong. Please try again.',
+          'error'
+        );
+      } finally {
+        submitButton.disabled = false;
+        submitButton.textContent =
+          mode === 'signup' ? 'Create account' : 'Sign in';
+      }
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,166 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#10130f">
+    <meta name="description" content="Track your daily habits and personal measures with HabitOS.">
+    <title>Habit Tracker — HabitOS</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="habit-tracker.css">
+    <script type="module" src="app.js"></script>
+    <script type="module" src="habit-tracker.js"></script>
+  </head>
+  <body>
+    <div class="page-shell tracker-page">
+      <header class="site-header">
+        <div class="nav-shell">
+          <a class="brand" href="index.html" aria-label="HabitOS home">
+            <span class="brand-mark" aria-hidden="true"><span></span><span></span><span></span></span>
+            <span class="brand-name">HabitOS</span><span class="brand-divider" aria-hidden="true"></span><span class="brand-descriptor">YOUR LIFE, INTENTIONALLY</span>
+          </a>
+          <nav class="primary-nav" aria-label="Main navigation"><a class="nav-link" href="index.html">Home</a></nav>
+          <div class="nav-date"><span class="date-indicator" aria-hidden="true"></span><time id="today-date">Today</time></div>
+        </div>
+      </header>
+
+      <main class="tracker-content content-width">
+        <section class="tracker-intro" aria-labelledby="tracker-title">
+          <div class="tracker-title-block">
+            <a class="back-link" href="index.html"><span aria-hidden="true">←</span> Home</a>
+            <p class="eyebrow"><span class="eyebrow-rule" aria-hidden="true"></span> Daily tracking</p>
+            <h1 id="tracker-title">Habit Tracker</h1>
+          </div>
+          <div class="tracker-controls">
+            <label class="target-control" for="water-target"><span>Water target</span><input id="water-target" type="number" min="0.1" max="20" step="0.1" inputmode="decimal" aria-label="Daily water target in litres"><span>L</span></label>
+            <div class="month-control" aria-label="Choose month">
+              <button class="icon-button" id="previous-month" type="button" aria-label="Previous month">←</button>
+              <label class="sr-only" for="month-picker">Selected month</label>
+              <input id="month-picker" type="month">
+              <button class="icon-button" id="next-month" type="button" aria-label="Next month">→</button>
+              <button class="text-button" id="current-month" type="button">Today</button>
+            </div>
+            <div class="tracker-actions">
+              <button class="primary-button" id="add-habit" type="button">＋ Add habit</button>
+              <details class="export-menu">
+                <summary>Export habits</summary>
+                <div class="export-menu-items">
+                  <button class="menu-action" id="export-csv" type="button">Download CSV · all dates</button>
+                  <button class="menu-action" id="export-data" type="button">Download JSON backup</button>
+                </div>
+              </details>
+              <button class="quiet-button" id="import-data" type="button">Import backup</button>
+              <input id="import-file" class="sr-only" type="file" accept="application/json,.json" tabindex="-1" aria-label="Choose a HabitOS backup file">
+            </div>
+          </div>
+        </section>
+
+        <p id="storage-message" class="storage-message" role="status" aria-live="polite"></p>
+
+        <nav class="tracker-tools" aria-label="More habit tools">
+          <button class="tool-button" id="view-analytics" type="button">View analytics</button>
+          <button class="tool-button" id="compare-periods" type="button">Compare periods</button>
+          <button class="tool-button" id="view-history" type="button">View history</button>
+          <button class="tool-button" id="reading-tracker" type="button">Reading tracker</button>
+        </nav>
+
+        <section class="tracker-main-grid" aria-label="Monthly calendar and selected date tracking">
+          <section class="calendar-panel panel" aria-labelledby="calendar-title">
+            <div class="panel-heading calendar-heading">
+              <div><p class="eyebrow"><span class="eyebrow-rule" aria-hidden="true"></span> Choose a day</p><h2 id="calendar-title">Calendar</h2></div>
+              <span class="calendar-hint">A dot marks a day with saved checklist entries.</span>
+            </div>
+            <div class="calendar-grid" id="calendar-grid" role="grid" aria-label="Monthly habit calendar"></div>
+            <div class="calendar-legend"><span><i class="legend-dot complete-dot"></i> All done</span><span><i class="legend-dot partial-dot"></i> Some done</span><span><i class="legend-dot missed-dot"></i> None completed</span></div>
+          </section>
+          <section class="daily-panel panel" aria-label="Selected date details">
+            <div id="daily-detail"></div>
+          </section>
+        </section>
+
+        <section class="local-data-note" aria-label="Local data storage information">
+          <span class="local-data-icon" aria-hidden="true">⌂</span>
+          <p><strong>Saved on this device.</strong> Export a JSON backup before clearing this browser's data.</p>
+        </section>
+      </main>
+
+      <footer class="site-footer content-width"><span>Built for everyday life.</span><span>© <span id="current-year">2026</span> HabitOS</span></footer>
+    </div>
+
+    <dialog id="habit-dialog" class="habit-dialog" aria-labelledby="habit-dialog-title">
+      <form id="habit-form">
+        <button class="dialog-close" id="close-habit-dialog" type="button" aria-label="Close dialog">×</button>
+        <p class="eyebrow"><span class="eyebrow-rule" aria-hidden="true"></span> Special habit</p>
+        <h2 id="habit-dialog-title">Add a habit</h2>
+        <p id="habit-dialog-copy">Add a personal routine to the Special section.</p>
+        <label class="dialog-field" for="habit-name">Habit name<input id="habit-name" name="habit-name" type="text" maxlength="40" required autocomplete="off" placeholder="e.g. Meditation"></label>
+        <p id="habit-form-error" class="form-error" role="alert"></p>
+        <div class="dialog-actions"><button class="quiet-button" id="cancel-habit-dialog" type="button">Cancel</button><button class="primary-button" id="save-habit" type="submit">Add habit</button></div>
+      </form>
+    </dialog>
+
+    <dialog id="analytics-dialog" class="utility-dialog analytics-dialog" aria-labelledby="insights-title">
+      <div class="dialog-frame">
+        <button class="dialog-close" id="close-analytics" type="button" aria-label="Close analytics">×</button>
+        <div class="dialog-heading"><p class="eyebrow">Your saved records</p><h2 id="insights-title">Habit analytics</h2><p class="dialog-copy">Only measures with enough recorded points are shown.</p></div>
+        <div class="insights-heading"><p class="insights-subtitle">Month shown: <span id="insights-month"></span></p><label class="insight-filter" for="insights-month-filter">Month<input id="insights-month-filter" type="month"></label></div>
+        <p id="analytics-empty" class="empty-message" hidden>There is not enough recorded data for charts in this month yet.</p>
+        <div class="chart-grid">
+          <section class="chart-card chart-wide" id="completion-card" aria-labelledby="completion-chart-title"><div class="chart-heading"><h3 id="completion-chart-title">Habit completion</h3><span class="chart-unit">Recorded days · percent</span></div><div id="completion-chart" class="chart-slot"></div></section>
+          <section class="chart-card" id="consistency-card" aria-labelledby="consistency-chart-title"><div class="chart-heading"><h3 id="consistency-chart-title">Habit consistency</h3><span class="chart-unit">Completed / recorded</span></div><div id="consistency-chart" class="consistency-chart"></div></section>
+          <section class="chart-card" id="weight-card" aria-labelledby="weight-chart-title"><div class="chart-heading"><h3 id="weight-chart-title">Weight</h3><span class="chart-unit">kg</span></div><div id="weight-chart" class="chart-slot"></div></section>
+          <section class="chart-card" id="sleep-card" aria-labelledby="sleep-chart-title"><div class="chart-heading"><h3 id="sleep-chart-title">Sleep duration</h3><span class="chart-unit">Hours</span></div><div id="sleep-chart" class="chart-slot"></div><p id="sleep-summary" class="chart-footnote"></p></section>
+          <section class="chart-card" id="water-card" aria-labelledby="water-chart-title"><div class="chart-heading"><h3 id="water-chart-title">Water intake</h3><span class="chart-unit">Litres · target <span id="water-target-label"></span></span></div><div id="water-chart" class="chart-slot"></div></section>
+        </div>
+      </div>
+    </dialog>
+
+    <dialog id="comparison-dialog" class="utility-dialog" aria-labelledby="comparison-title">
+      <div class="dialog-frame">
+        <button class="dialog-close" id="close-comparison" type="button" aria-label="Close comparison">×</button>
+        <div class="dialog-heading"><p class="eyebrow">Actual saved records</p><h2 id="comparison-title">Compare periods</h2><p class="dialog-copy">Choose two date ranges. Unrecorded days are excluded from averages.</p></div>
+        <div class="period-pickers">
+          <fieldset><legend>Period A</legend><label>From<input id="period-a-start" type="date"></label><label>To<input id="period-a-end" type="date"></label></fieldset>
+          <fieldset><legend>Period B</legend><label>From<input id="period-b-start" type="date"></label><label>To<input id="period-b-end" type="date"></label></fieldset>
+        </div>
+        <p id="comparison-error" class="form-error" role="alert"></p>
+        <div id="habit-comparison-results" class="comparison-results" aria-live="polite"></div>
+      </div>
+    </dialog>
+
+    <dialog id="history-dialog" class="utility-dialog" aria-labelledby="history-title">
+      <div class="dialog-frame">
+        <button class="dialog-close" id="close-history" type="button" aria-label="Close history">×</button>
+        <div class="dialog-heading"><p class="eyebrow">Daily records</p><h2 id="history-title">Habit history</h2><p class="dialog-copy">Review saved checklist and measure entries by date.</p></div>
+        <div class="history-range"><label>From<input id="history-from" type="date"></label><label>To<input id="history-to" type="date"></label></div>
+        <div class="history-table-wrap"><table class="history-table"><thead><tr><th>Date</th><th>Checklist</th><th>Water</th><th>Weight</th><th>Sleep</th><th>Spent</th></tr></thead><tbody id="habit-history-body"></tbody></table></div>
+        <p id="habit-history-empty" class="empty-message" hidden>No saved tracking records in this date range.</p>
+      </div>
+    </dialog>
+
+    <dialog id="reading-dialog" class="utility-dialog reading-dialog" aria-labelledby="reading-title">
+      <div class="dialog-frame">
+        <button class="dialog-close" id="close-reading" type="button" aria-label="Close reading tracker">×</button>
+        <div class="dialog-heading"><p class="eyebrow">Optional</p><h2 id="reading-title">Reading tracker</h2></div>
+        <section id="reading-setup" class="reading-setup">
+          <p>Are you currently reading a book?</p>
+          <div class="reading-choice-actions"><button class="primary-button" type="button" data-reading-choice="yes">Yes, I'm reading</button><button class="quiet-button" type="button" data-reading-choice="no">Not currently</button></div>
+        </section>
+        <section id="reading-status" class="reading-status" hidden>
+          <p id="reading-status-message" role="status" aria-live="polite"></p>
+          <div id="reading-book-card" class="reading-book-card" hidden></div>
+          <div class="reading-choice-actions"><button class="quiet-button" id="edit-reading" type="button">Update details</button><button class="quiet-button" id="finish-reading" type="button">Mark finished</button><button class="text-button" id="stop-reading" type="button">Not reading now</button></div>
+        </section>
+        <form id="reading-form" class="reading-form" hidden>
+          <label class="dialog-field" for="book-title">Book title<input id="book-title" type="text" maxlength="120" required autocomplete="off"></label>
+          <label class="dialog-field" for="book-author">Author <span class="optional-label">Optional</span><input id="book-author" type="text" maxlength="100" autocomplete="off"></label>
+          <p id="reading-error" class="form-error" role="alert"></p>
+          <div class="dialog-actions"><button class="quiet-button" id="cancel-reading-edit" type="button">Cancel</button><button class="primary-button" type="submit">Save book</button></div>
+        </form>
+      </div>
+    </dialog>
+  </body>
+</html>

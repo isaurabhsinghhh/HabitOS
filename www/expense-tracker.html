@@ -1,0 +1,204 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#10130f">
+    <meta name="description" content="Record expenses, set budgets, and review spending with HabitOS.">
+    <title>Expense Tracker — HabitOS</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="expense-tracker.css">
+    <script type="module" src="app.js"></script>
+<script type="module" src="supabase-client.js"></script>
+<script type="module" src="expense-tracker.js"></script>
+  </head>
+  <body>
+    <div class="page-shell expense-page">
+      <header class="site-header">
+        <div class="nav-shell">
+          <a class="brand" href="index.html" aria-label="HabitOS home">
+            <span class="brand-mark" aria-hidden="true"><span></span><span></span><span></span></span>
+            <span class="brand-name">HabitOS</span><span class="brand-divider" aria-hidden="true"></span><span class="brand-descriptor">YOUR LIFE, INTENTIONALLY</span>
+          </a>
+          <nav class="primary-nav" aria-label="Main navigation"><a class="nav-link" href="index.html">Home</a></nav>
+          <div class="nav-date"><span class="date-indicator" aria-hidden="true"></span><time id="today-date">Today</time></div>
+        </div>
+      </header>
+
+      <main class="expense-content content-width">
+        <section class="expense-intro" aria-labelledby="expense-title">
+          <div class="expense-title-block">
+            <a class="back-link" href="index.html"><span aria-hidden="true">←</span> Home</a>
+            <p class="eyebrow"><span class="eyebrow-rule" aria-hidden="true"></span> Daily spending</p>
+            <h1 id="expense-title">Expense Tracker</h1>
+          </div>
+          <div class="expense-controls">
+            <div class="month-control" aria-label="Choose month">
+              <button class="icon-button" id="previous-month" type="button" aria-label="Previous month">←</button>
+              <label class="sr-only" for="month-picker">Selected month</label>
+              <input id="month-picker" type="month">
+              <button class="icon-button" id="next-month" type="button" aria-label="Next month">→</button>
+              <button class="text-button" id="current-month" type="button">Today</button>
+            </div>
+            <div class="expense-actions">
+              <button class="primary-button expense-primary" id="add-expense" type="button">＋ Add expense</button>
+              <details class="export-menu">
+                <summary>Export expenses</summary>
+                <div class="export-menu-items">
+                  <button class="menu-action" id="export-csv" type="button">Download CSV · all dates</button>
+                  <button class="menu-action" id="export-data" type="button">Download JSON backup</button>
+                  <button class="menu-action" id="import-data" type="button">Import JSON backup</button>
+                </div>
+              </details>
+              <input id="import-file" class="sr-only" type="file" accept="application/json,.json" tabindex="-1" aria-label="Choose an expense backup file">
+            </div>
+          </div>
+        </section>
+
+        <p id="storage-message" class="storage-message" role="status" aria-live="polite"></p>
+
+        <nav class="expense-tools" aria-label="More expense tools">
+          <button class="tool-button" id="manage-budgets" type="button">Edit budgets</button>
+          <button class="tool-button" id="view-analytics" type="button">View analytics</button>
+          <button class="tool-button" id="compare-periods" type="button">Compare periods</button>
+          <button class="tool-button" id="view-history" type="button">Transaction history</button>
+          <button class="tool-button" id="manage-categories" type="button">Manage categories</button>
+        </nav>
+
+        <section class="financial-overview" aria-label="Selected day and month totals">
+          <div id="summary-grid" class="overview-grid"></div>
+        </section>
+
+        <section class="expense-main-grid" aria-label="Spending calendar and selected date expenses">
+          <section class="expense-calendar panel" aria-labelledby="calendar-title">
+            <div class="panel-heading expense-panel-heading">
+              <div><p class="eyebrow"><span class="eyebrow-rule" aria-hidden="true"></span> Select a day</p><h2 id="calendar-title">Calendar</h2></div>
+              <span class="calendar-hint">A dot marks a date with a saved expense.</span>
+            </div>
+            <div class="calendar-weekdays" aria-hidden="true"><span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span><span>Sun</span></div>
+            <div class="expense-calendar-grid" id="calendar-grid" role="grid" aria-label="Monthly expense calendar"></div>
+            <p class="calendar-data-note">No dot means no transaction is recorded; it does not confirm zero spending.</p>
+          </section>
+          <section class="expense-daily-panel panel" aria-label="Transactions for the selected date">
+            <div id="daily-detail"></div>
+          </section>
+        </section>
+
+        <section class="local-data-note expense-data-note" aria-label="Local data storage information">
+          <span class="local-data-icon" aria-hidden="true">⌂</span>
+          <p><strong>Saved on this device.</strong> Export a JSON backup before clearing this browser's data.</p>
+        </section>
+      </main>
+
+      <footer class="site-footer content-width"><span>Built for everyday life.</span><span>© <span id="current-year">2026</span> HabitOS</span></footer>
+    </div>
+
+    <dialog id="expense-dialog" class="expense-dialog" aria-labelledby="expense-dialog-title">
+      <form id="expense-form">
+        <button class="dialog-close" id="close-expense-dialog" type="button" aria-label="Close dialog">×</button>
+        <p class="eyebrow"><span class="eyebrow-rule" aria-hidden="true"></span> Expense</p>
+        <h2 id="expense-dialog-title">Add an expense</h2>
+        <p class="dialog-copy">Only the saved fields needed to record this purchase.</p>
+        <input id="expense-id" type="hidden">
+        <div class="expense-form-grid">
+          <label class="dialog-field field-span" for="expense-description">Description<input id="expense-description" name="description" type="text" maxlength="80" required autocomplete="off" placeholder="e.g. Lunch"></label>
+          <label class="dialog-field" for="expense-amount">Amount (₹)<input id="expense-amount" name="amount" type="number" min="0.01" step="0.01" inputmode="decimal" required placeholder="0.00"></label>
+          <label class="dialog-field" for="expense-date">Date<input id="expense-date" name="date" type="date" required></label>
+          <label class="dialog-field" for="expense-category">Category<select id="expense-category" name="category" required></select></label>
+          <label class="dialog-field" for="expense-payment">Payment method <span class="optional-label">Optional</span><select id="expense-payment" name="payment"><option value="">Not specified</option><option>Cash</option><option>UPI</option><option>Card</option><option>Bank transfer</option><option>Other</option></select></label>
+          <label class="dialog-field field-span" for="expense-notes">Notes <span class="optional-label">Optional</span><textarea id="expense-notes" name="notes" maxlength="240" rows="3" placeholder="Anything else to remember?"></textarea></label>
+        </div>
+        <p id="expense-form-error" class="form-error" role="alert"></p>
+        <div class="dialog-actions"><button class="quiet-button" id="cancel-expense-dialog" type="button">Cancel</button><button class="primary-button expense-primary" id="save-expense" type="submit">Save expense</button></div>
+      </form>
+    </dialog>
+
+    <dialog id="budget-dialog" class="expense-dialog utility-dialog" aria-labelledby="budget-dialog-title">
+      <div class="dialog-frame">
+        <button class="dialog-close" id="close-budget-dialog" type="button" aria-label="Close budgets">×</button>
+        <div class="dialog-heading"><p class="eyebrow">User-set amounts</p><h2 id="budget-dialog-title">Budgets</h2><p class="dialog-copy">Daily limits take effect on their selected date. Monthly limits are separate for each month.</p></div>
+        <div class="budget-grid">
+          <section class="budget-card" aria-labelledby="daily-budget-title">
+            <div class="budget-card-heading"><h3 id="daily-budget-title">Daily budget</h3><span id="daily-budget-date" class="budget-date"></span></div>
+            <form id="daily-budget-form" class="budget-form">
+              <label for="daily-budget-input">Amount (₹)</label>
+              <div class="budget-input-row"><input id="daily-budget-input" name="amount" type="number" min="0" step="0.01" inputmode="decimal" placeholder="Not set" aria-describedby="daily-budget-help"><button class="quiet-button" type="submit">Save</button></div>
+              <p id="daily-budget-help" class="budget-help">Applies from this date until the next budget change. Leave blank to clear this date's setting.</p>
+            </form>
+            <div id="daily-budget-status" class="budget-status" aria-live="polite"></div>
+          </section>
+          <section class="budget-card" aria-labelledby="monthly-budget-title">
+            <div class="budget-card-heading"><h3 id="monthly-budget-title">Monthly budget</h3><span id="monthly-budget-date" class="budget-date"></span></div>
+            <form id="monthly-budget-form" class="budget-form">
+              <label for="monthly-budget-input">Amount (₹)</label>
+              <div class="budget-input-row"><input id="monthly-budget-input" name="amount" type="number" min="0" step="0.01" inputmode="decimal" placeholder="Not set"><button class="quiet-button" type="submit">Save</button></div>
+              <p class="budget-help">Leave blank to remove this month's budget.</p>
+            </form>
+            <div id="monthly-budget-status" class="budget-status" aria-live="polite"></div>
+          </section>
+        </div>
+      </div>
+    </dialog>
+
+    <dialog id="category-dialog" class="expense-dialog utility-dialog" aria-labelledby="category-dialog-title">
+      <div class="dialog-frame">
+        <button class="dialog-close" id="close-category-dialog" type="button" aria-label="Close categories">×</button>
+        <div class="dialog-heading"><p class="eyebrow">Expense entry</p><h2 id="category-dialog-title">Categories</h2><p class="dialog-copy">Add a category to the list used when recording an expense.</p></div>
+        <form id="category-form" class="category-add-form">
+          <label for="category-input">New category</label>
+          <div class="category-input-row"><input id="category-input" type="text" maxlength="32" placeholder="e.g. Pet care" autocomplete="off"><button type="submit" class="quiet-button">Add</button></div>
+          <span id="category-error" class="form-error" role="alert"></span>
+        </form>
+        <p id="category-list" class="category-list" aria-live="polite"></p>
+      </div>
+    </dialog>
+
+    <dialog id="analytics-dialog" class="expense-dialog utility-dialog analytics-dialog" aria-labelledby="insights-title">
+      <div class="dialog-frame">
+        <button class="dialog-close" id="close-analytics" type="button" aria-label="Close analytics">×</button>
+        <div class="dialog-heading"><p class="eyebrow">Saved transactions and budgets</p><h2 id="insights-title">Expense analytics</h2><p class="dialog-copy">Charts update for the selected month. Empty and single-point charts stay hidden.</p></div>
+        <p class="insights-month-label">Month shown: <span id="insights-month"></span></p>
+        <p id="analytics-empty" class="empty-message" hidden>There is not enough recorded expense data for charts in this month yet.</p>
+        <div class="expense-chart-grid">
+          <section class="expense-chart-card chart-wide" id="category-chart-card" aria-labelledby="category-chart-title">
+            <div class="chart-heading"><h3 id="category-chart-title">Spending by category</h3><span class="chart-unit">Recorded spending · ₹</span></div>
+            <div class="category-chart-layout"><div id="category-chart" class="category-chart-slot"></div><div id="category-legend" class="category-legend"></div></div>
+          </section>
+          <section class="expense-chart-card chart-wide" id="daily-chart-card" aria-labelledby="daily-chart-title"><div class="chart-heading"><h3 id="daily-chart-title">Daily spending</h3><span class="chart-unit">Recorded ₹ per day</span></div><div id="daily-chart" class="expense-chart-slot"></div><p class="chart-footnote">A blank day means no saved expense, not confirmed zero spending.</p></section>
+          <section class="expense-chart-card" id="budget-chart-card" aria-labelledby="budget-chart-title"><div class="chart-heading"><h3 id="budget-chart-title">Budget and actual</h3></div><div id="budget-chart" class="budget-chart-slot"></div></section>
+          <section class="expense-chart-card" id="comparison-chart-card" aria-labelledby="comparison-chart-title"><div class="chart-heading"><h3 id="comparison-chart-title">Monthly spending</h3><span class="chart-unit">Recorded months</span></div><div id="comparison-chart" class="comparison-chart-slot"></div></section>
+        </div>
+      </div>
+    </dialog>
+
+    <dialog id="comparison-dialog" class="expense-dialog utility-dialog" aria-labelledby="comparison-title">
+      <div class="dialog-frame">
+        <button class="dialog-close" id="close-comparison" type="button" aria-label="Close comparison">×</button>
+        <div class="dialog-heading"><p class="eyebrow">Actual saved transactions</p><h2 id="comparison-title">Compare periods</h2><p class="dialog-copy">Compare totals and recorded days. Days without transactions are not counted as zero-spend days.</p></div>
+        <div class="period-pickers">
+          <fieldset><legend>Period A</legend><label>From<input id="period-a-start" type="date"></label><label>To<input id="period-a-end" type="date"></label></fieldset>
+          <fieldset><legend>Period B</legend><label>From<input id="period-b-start" type="date"></label><label>To<input id="period-b-end" type="date"></label></fieldset>
+        </div>
+        <p id="comparison-error" class="form-error" role="alert"></p>
+        <div id="expense-comparison-results" class="comparison-results" aria-live="polite"></div>
+      </div>
+    </dialog>
+
+    <dialog id="history-dialog" class="expense-dialog utility-dialog history-dialog" aria-labelledby="history-title">
+      <div class="dialog-frame">
+        <button class="dialog-close" id="close-history" type="button" aria-label="Close history">×</button>
+        <div class="dialog-heading"><p class="eyebrow">All saved dates</p><h2 id="history-title">Transaction history</h2><p class="dialog-copy">Search, filter, and edit transactions. Leave date filters blank to show all history.</p></div>
+        <div class="history-tools">
+          <label class="search-control"><span aria-hidden="true">⌕</span><span class="sr-only">Search descriptions</span><input id="history-search" type="search" placeholder="Search descriptions…" autocomplete="off"></label>
+          <label class="filter-control"><span>Category</span><select id="history-category"><option value="">All categories</option></select></label>
+          <label class="filter-control"><span>Sort</span><select id="history-sort"><option value="date-desc">Newest first</option><option value="date-asc">Oldest first</option><option value="amount-desc">Amount: high to low</option><option value="amount-asc">Amount: low to high</option></select></label>
+        </div>
+        <div class="history-range"><label>From<input id="history-from" type="date"></label><label>To<input id="history-to" type="date"></label><span id="history-count" class="history-count"></span></div>
+        <div class="history-table-wrap"><table class="history-table"><thead><tr><th>Date</th><th>Description</th><th>Category</th><th>Payment</th><th class="amount-column">Amount</th><th><span class="sr-only">Actions</span></th></tr></thead><tbody id="history-body"></tbody></table><div id="history-empty" class="history-empty" hidden></div></div>
+      </div>
+    </dialog>
+  </body>
+</html>
